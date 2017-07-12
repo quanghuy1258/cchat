@@ -8,7 +8,6 @@
 #include <pthread.h>
   
 #define DEFAULT_BUFLEN 512
-#define DEFAULT_PORT 6969
 
 void * OnDataReceived(void *param) {
  int sockfd, ret;
