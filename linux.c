@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -37,7 +38,7 @@ int clientMode(char *ipServer, char *port) {
  }
  memset(&addr, 0, sizeof(addr));  
  addr.sin_family = AF_INET;  
- addr.sin_addr.s_addr = inet_addr(serverName);
+ addr.sin_addr.s_addr = inet_addr(ipServer);
  addr.sin_port = atoi(port);     
  ret = connect(sockfd, (struct sockaddr *) &addr, sizeof(addr));  
  if (ret < 0) {  
