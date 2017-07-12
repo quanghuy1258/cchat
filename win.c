@@ -71,7 +71,7 @@ int clientMode(char *ipServer, char *port) {
 	}
 	freeaddrinfo(result);
 	if (ConnectSocket == INVALID_SOCKET) {
-		printf("Unable to connect to server: %d!\n", WSAGetLastError());
+		printf("Unable to connect to server: %d\n", WSAGetLastError());
 		WSACleanup();
 		return 1;
 	}
