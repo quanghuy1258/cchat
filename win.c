@@ -3,6 +3,8 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <windows.h>
@@ -45,7 +47,7 @@ int clientMode(char *ipServer, char *port) {
 	ZeroMemory(&hints, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
+	hints.ai_protocol = 0;
 	iResult = getaddrinfo(ipServer, port, &hints, &result);
 	if (iResult != 0) {
 		printf("getaddrinfo failed with error: %d\n", iResult);
@@ -113,7 +115,7 @@ int serverMode(char *port) {
 	ZeroMemory(&hints, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
+	hints.ai_protocol = 0;
 	hints.ai_flags = AI_PASSIVE;
 	iResult = getaddrinfo(NULL, port, &hints, &result);
 	if (iResult != 0) {
