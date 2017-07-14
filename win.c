@@ -16,6 +16,8 @@
 
 #define DEFAULT_BUFLEN 512
 
+int isConnected = 0;
+
 void OnDataReceived(void *param) {
 	int iResult;
 	SOCKET soc = *((SOCKET*)param);
@@ -29,6 +31,7 @@ void OnDataReceived(void *param) {
 		else
 			printf("recv failed with error: %d socket[ %u ]\n", WSAGetLastError(), soc);
 	} while (iResult > 0);
+	isConnected = 0;
 	_endthread();
 }
 
@@ -80,9 +83,11 @@ int clientMode(char *ipServer, char *port) {
 		WSACleanup();
 		return 1;
 	}
+	isConnected = 1;
 	handle = (HANDLE)_beginthread(OnDataReceived, 0, &ConnectSocket);
 	printf("Chat started\n");
 	while (fgets(sendbuf, DEFAULT_BUFLEN, stdin) != NULL) {
+		if (isConnected == 0) break;
 		iResult = send(ConnectSocket, sendbuf, DEFAULT_BUFLEN, 0);
 		if (iResult == SOCKET_ERROR) {
 			printf("send failed with error: %d\n", WSAGetLastError());
@@ -166,9 +171,11 @@ int serverMode(char *port) {
 	}
 	else printf("accept: socket[ %u ]\n", ClientSocket);
 	closesocket(ListenSocket);
+	isConnected = 1;
 	handle = (HANDLE)_beginthread(OnDataReceived, 0, &ClientSocket);
 	printf("Chat started\n");
 	while (fgets(sendbuf, DEFAULT_BUFLEN, stdin) != NULL) {
+		if (isConnected == 0) break;
 		iResult = send(ClientSocket, sendbuf, DEFAULT_BUFLEN, 0);
 		if (iResult == SOCKET_ERROR) {
 			printf("send failed with error: %d\n", WSAGetLastError());
