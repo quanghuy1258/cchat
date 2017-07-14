@@ -63,7 +63,7 @@ int clientMode(char *ipServer, char *port) {
 			WSACleanup();
 			return 1;
 		}
-		printf("? - connect: ai_flags [ %d ] ai_family[ %d ] ai_socktype[ %d ] ai_protocol[ %d ] sin_family[ %hu ] sin_addr[ %lu ] sin_port[ %hu ]\n",
+		printf("? - connect: ai_flags[ %d ] ai_family[ %d ] ai_socktype[ %d ] ai_protocol[ %d ] sin_family[ %hu ] sin_addr[ %lu ] sin_port[ %hu ]\n",
 			ptr->ai_flags, ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol, ((SOCKADDR_IN*)ptr->ai_addr)->sin_family, ((SOCKADDR_IN*)ptr->ai_addr)->sin_addr.s_addr, ((SOCKADDR_IN*)ptr->ai_addr)->sin_port);
 		iResult = connect(ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
 		if (iResult == SOCKET_ERROR) {
@@ -146,7 +146,7 @@ int serverMode(char *port) {
 		WSACleanup();
 		return 1;
 	}
-	else printf("bind: ai_flags [ %d ] ai_family[ %d ] ai_socktype[ %d ] ai_protocol[ %d ] sin_family[ %hu ] sin_addr[ %lu ] sin_port[ %hu ]\n",
+	else printf("bind: ai_flags[ %d ] ai_family[ %d ] ai_socktype[ %d ] ai_protocol[ %d ] sin_family[ %hu ] sin_addr[ %lu ] sin_port[ %hu ]\n",
 		result->ai_flags, result->ai_family, result->ai_socktype, result->ai_protocol, ((SOCKADDR_IN*)result->ai_addr)->sin_family, ((SOCKADDR_IN*)result->ai_addr)->sin_addr.s_addr, ((SOCKADDR_IN*)result->ai_addr)->sin_port);
 	freeaddrinfo(result);
 	iResult = listen(ListenSocket, 3);
