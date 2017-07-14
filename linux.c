@@ -40,7 +40,7 @@ int clientMode(char *ipServer, char *port) {
  memset(&addr, 0, sizeof(addr));
  addr.sin_family = AF_INET;
  addr.sin_addr.s_addr = inet_addr(ipServer);
- addr.sin_port = atoi(port);
+ addr.sin_port = htons(port);
  ret = connect(sockfd, (struct sockaddr *) &addr, sizeof(addr));
  if (ret < 0) {
   printf("Error connecting to the server: sin_family[ %hd ] s_addr[ %lu ] sin_port[ %hu ]\n", addr.sin_family, addr.sin_addr.s_addr, addr.sin_port);
