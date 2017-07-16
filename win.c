@@ -37,8 +37,9 @@ void OnDataReceived(void *param) {
 
 int clientMode(char *ipServer, char *port) {
 	WSADATA wsaData;
-	int iResult;
 	struct addrinfo *result = NULL, *ptr = NULL, hints;
+	struct sockaddr name;
+	int iResult, nameLen = sizeof(name);
 	SOCKET ConnectSocket = INVALID_SOCKET;
 	char sendbuf[DEFAULT_BUFLEN] = { 0 };
 	HANDLE handle;
@@ -83,6 +84,22 @@ int clientMode(char *ipServer, char *port) {
 		WSACleanup();
 		return 1;
 	}
+	iResult = getsockname(ConnectSocket, &name, &nameLen);
+	if (iResult == SOCKET_ERROR) {
+		printf("getsockname failed with error: %ld\n", WSAGetLastError());
+		closesocket(ConnectSocket);
+		WSACleanup();
+		return 1;
+	}
+	else printf("getsockname: sin_family[ %hu ] sin_addr[ %lu ] sin_port[ %hu ]\n", ((SOCKADDR_IN*)&name)->sin_family, ((SOCKADDR_IN*)&name)->sin_addr.s_addr, ((SOCKADDR_IN*)&name)->sin_port);
+	iResult = getpeername(ConnectSocket, &name, &nameLen);
+	if (iResult == SOCKET_ERROR) {
+		printf("getpeername failed with error: %ld\n", WSAGetLastError());
+		closesocket(ConnectSocket);
+		WSACleanup();
+		return 1;
+	}
+	else printf("getpeername: sin_family[ %hu ] sin_addr[ %lu ] sin_port[ %hu ]\n", ((SOCKADDR_IN*)&name)->sin_family, ((SOCKADDR_IN*)&name)->sin_addr.s_addr, ((SOCKADDR_IN*)&name)->sin_port);
 	isConnected = 1;
 	handle = (HANDLE)_beginthread(OnDataReceived, 0, &ConnectSocket);
 	printf("==============================================================\n");
@@ -97,7 +114,7 @@ int clientMode(char *ipServer, char *port) {
 		}
 	}
 	iResult = shutdown(ConnectSocket, SD_SEND);
-	if (iResult == SOCKET_ERROR) 
+	if (iResult == SOCKET_ERROR)
 		printf("shutdown failed with error: %d\n", WSAGetLastError());
 	WaitForSingleObject(handle, INFINITE);
 	closesocket(ConnectSocket);
@@ -107,8 +124,9 @@ int clientMode(char *ipServer, char *port) {
 
 int serverMode(char *port) {
 	WSADATA wsaData;
-	int iResult;
 	struct addrinfo *result = NULL, hints;
+	struct sockaddr name;
+	int iResult, nameLen = sizeof(name);
 	SOCKET ListenSocket = INVALID_SOCKET;
 	SOCKET ClientSocket = INVALID_SOCKET;
 	char sendbuf[DEFAULT_BUFLEN] = { 0 };
@@ -167,6 +185,22 @@ int serverMode(char *port) {
 	}
 	else printf("accept: socket[ %u ]\n", ClientSocket);
 	closesocket(ListenSocket);
+	iResult = getsockname(ClientSocket, &name, &nameLen);
+	if (iResult == SOCKET_ERROR) {
+		printf("getsockname failed with error: %ld\n", WSAGetLastError());
+		closesocket(ClientSocket);
+		WSACleanup();
+		return 1;
+	}
+	else printf("getsockname: sin_family[ %hu ] sin_addr[ %lu ] sin_port[ %hu ]\n", ((SOCKADDR_IN*)&name)->sin_family, ((SOCKADDR_IN*)&name)->sin_addr.s_addr, ((SOCKADDR_IN*)&name)->sin_port);
+	iResult = getpeername(ClientSocket, &name, &nameLen);
+	if (iResult == SOCKET_ERROR) {
+		printf("getpeername failed with error: %ld\n", WSAGetLastError());
+		closesocket(ClientSocket);
+		WSACleanup();
+		return 1;
+	}
+	else printf("getpeername: sin_family[ %hu ] sin_addr[ %lu ] sin_port[ %hu ]\n", ((SOCKADDR_IN*)&name)->sin_family, ((SOCKADDR_IN*)&name)->sin_addr.s_addr, ((SOCKADDR_IN*)&name)->sin_port);
 	isConnected = 1;
 	handle = (HANDLE)_beginthread(OnDataReceived, 0, &ClientSocket);
 	printf("==============================================================\n");
