@@ -10,6 +10,8 @@
 
 #define DEFAULT_BUFLEN 512
 
+int isConnected = 0;
+
 void * OnDataReceived(void *param) {
  int sockfd, ret;
  char buffer[DEFAULT_BUFLEN] = { 0 };
@@ -17,12 +19,13 @@ void * OnDataReceived(void *param) {
  do {
   ret = recvfrom(sockfd, buffer, DEFAULT_BUFLEN, 0, NULL, NULL);
   if (ret < 0)
-   printf("Error receiving data: socket[ %d ]\n", sockfd);
+   printf("error receiving data: socket[ %d ]\n", sockfd);
   else if (ret == 0)
-   printf("Connection closed: socket[ %d ]\n", sockfd);
+   printf("connection closed: socket[ %d ]\n", sockfd);
   else
    printf("\n[FRIEND] %s\n", buffer);
  } while (ret > 0);
+ isConnected = 0;
  return NULL;
 }
 
@@ -33,31 +36,42 @@ int clientMode(char *ipServer, char *port) {
  pthread_t rThread;
  sockfd = socket(AF_INET, SOCK_STREAM, 0);
  if (sockfd < 0) {
-  printf("Error creating socket: domain[ %d ] type[ %d ] protocol[ %d ]\n", AF_INET, SOCK_STREAM, 0);
+  printf("error creating socket: domain[ %d ] type[ %d ] protocol[ %d ]\n", AF_INET, SOCK_STREAM, 0);
   return 1;
  }
- else printf("Create socket: socket[ %d ] domain[ %d ] type[ %d ] protocol[ %d ]\n", sockfd, AF_INET, SOCK_STREAM, 0);
+ else printf("create socket: socket[ %d ] domain[ %d ] type[ %d ] protocol[ %d ]\n", sockfd, AF_INET, SOCK_STREAM, 0);
  memset(&addr, 0, sizeof(addr));
  addr.sin_family = AF_INET;
  addr.sin_addr.s_addr = inet_addr(ipServer);
  addr.sin_port = htons(atoi(port));
  ret = connect(sockfd, (struct sockaddr *) &addr, sizeof(addr));
  if (ret < 0) {
-  printf("Error connecting to the server: sin_family[ %hd ] s_addr[ %lu ] sin_port[ %hu ]\n", addr.sin_family, addr.sin_addr.s_addr, addr.sin_port);
+  printf("error connecting to the server: sin_family[ %hd ] s_addr[ %lu ] sin_port[ %hu ]\n", addr.sin_family, addr.sin_addr.s_addr, addr.sin_port);
+  close(sockfd);
   return 1;
  }
- else printf("Connect server: sin_family[ %hd ] s_addr[ %lu ] sin_port[ %hu ]\n", addr.sin_family, addr.sin_addr.s_addr, addr.sin_port);
+ else printf("connect server: sin_family[ %hd ] s_addr[ %lu ] sin_port[ %hu ]\n", addr.sin_family, addr.sin_addr.s_addr, addr.sin_port);
  ret = pthread_create(&rThread, NULL, OnDataReceived, &sockfd);
  if (ret) {
-  printf("ERROR: Return Code from pthread_create() is %d\n", ret);
+  printf("error: return Code from pthread_create() is %d\n", ret);
+  close(sockfd);
   return 1;
  }
- printf("Chat started\n");
+ isConnected = 1;
+ printf("chat started\n\n");
  while (fgets(buffer, DEFAULT_BUFLEN, stdin) != NULL) {
+  if (isConnected == 0) break;
   ret = sendto(sockfd, buffer, DEFAULT_BUFLEN, 0, (struct sockaddr *) &addr, sizeof(addr));
-  if (ret < 0)
-   printf("Error sending data\n");
+  if (ret < 0) {
+   printf("error sending data\n");
+   close(sockfd);
+   pthread_exit(NULL);
+   return 1;
+  }
  }
+ ret = shutdown(sockfd, SHUT_WR);
+ if (ret < 0) 
+  printf("shutdown failed\n");
  close(sockfd);
  pthread_exit(NULL);
  return 0;
@@ -70,46 +84,59 @@ int serverMode(char *port) {
  pthread_t rThread;
  sockfd = socket(AF_INET, SOCK_STREAM, 0);
  if (sockfd < 0) {
-  printf("Error creating socket: domain[ %d ] type[ %d ] protocol[ %d ]\n", AF_INET, SOCK_STREAM, 0);
+  printf("error creating socket: domain[ %d ] type[ %d ] protocol[ %d ]\n", AF_INET, SOCK_STREAM, 0);
   return 1;
  }
- else printf("Create socket: socket[ %d ]\n", sockfd);
+ else printf("create socket: socket[ %d ]\n", sockfd);
  memset(&addr, 0, sizeof(addr));
  addr.sin_family = AF_INET;
  addr.sin_addr.s_addr = INADDR_ANY;
  addr.sin_port = htons(atoi(port));
  ret = bind(sockfd, (struct sockaddr *) &addr, sizeof(addr));
  if (ret < 0) {
-  printf("Error binding: sin_family[ %hd ] s_addr[ %lu ] sin_port[ %hu ]\n", addr.sin_family, addr.sin_addr.s_addr, addr.sin_port);
+  printf("error binding: sin_family[ %hd ] s_addr[ %lu ] sin_port[ %hu ]\n", addr.sin_family, addr.sin_addr.s_addr, addr.sin_port);
+  close(sockfd);
   return 1;
  }
- else printf("Bind: sin_family[ %hd ] s_addr[ %lu ] sin_port[ %hu ]\n", addr.sin_family, addr.sin_addr.s_addr, addr.sin_port);
+ else printf("bind: sin_family[ %hd ] s_addr[ %lu ] sin_port[ %hu ]\n", addr.sin_family, addr.sin_addr.s_addr, addr.sin_port);
  ret = listen(sockfd, 3);
  if (ret < 0) {
-  printf("Error listening: socket[ %d ]\n", sockfd);
+  printf("error listening: socket[ %d ]\n", sockfd);
+  close(sockfd);
   return 1;
  }
- else printf("Listen: socket[ %d ]\n", sockfd);
+ else printf("listen: socket[ %d ]\n", sockfd);
  len = sizeof(cl_addr);
  newsockfd = accept(sockfd, (struct sockaddr *) &cl_addr, &len);
  if (newsockfd < 0) {
-  printf("Error accepting connection: sin_family[ %hd ] s_addr[ %lu ] sin_port[ %hu ]\n", cl_addr.sin_family, cl_addr.sin_addr.s_addr, cl_addr.sin_port);
+  printf("error accepting connection: sin_family[ %hd ] s_addr[ %lu ] sin_port[ %hu ]\n", cl_addr.sin_family, cl_addr.sin_addr.s_addr, cl_addr.sin_port);
+  close(sockfd);
   return 1;
  }
- else printf("Accept connection: socket[ %d ] sin_family[ %hd ] s_addr[ %lu ] sin_port[ %hu ]\n", newsockfd, cl_addr.sin_family, cl_addr.sin_addr.s_addr, cl_addr.sin_port);
+ else printf("accept connection: socket[ %d ] sin_family[ %hd ] s_addr[ %lu ] sin_port[ %hu ]\n", newsockfd, cl_addr.sin_family, cl_addr.sin_addr.s_addr, cl_addr.sin_port);
  ret = pthread_create(&rThread, NULL, OnDataReceived, &newsockfd);
  if (ret) {
-  printf("ERROR: Return Code from pthread_create() is %d\n", ret);
+  printf("error: return Code from pthread_create() is %d\n", ret);
+  close(newsockfd);
+  close(sockfd);
   return 1;
  }
- printf("Chat started\n");
+ isConnected = 1;
+ printf("chat started\n\n");
  while (fgets(buffer, DEFAULT_BUFLEN, stdin) != NULL) {
+  if (isConnected == 0) break;
   ret = sendto(newsockfd, buffer, DEFAULT_BUFLEN, 0, (struct sockaddr *) &cl_addr, len);
   if (ret < 0) {
-   printf("Error sending data\n");
+   printf("error sending data\n");
+   close(newsockfd);
+   close(sockfd);
+   pthread_exit(NULL);
    return 1;
   }
  }
+ ret = shutdown(newsockfd, SHUT_WR);
+ if (ret < 0) 
+  printf("shutdown failed\n");
  close(newsockfd);
  close(sockfd);
  pthread_exit(NULL);
