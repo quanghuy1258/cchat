@@ -58,7 +58,7 @@ int clientMode(char *ipServer, char *port) {
   return 1;
  }
  isConnected = 1;
- printf("chat started\n\n");
+ printf("==============================================================\n");
  while (fgets(buffer, DEFAULT_BUFLEN, stdin) != NULL) {
   if (isConnected == 0) break;
   ret = sendto(sockfd, buffer, DEFAULT_BUFLEN, 0, (struct sockaddr *) &addr, sizeof(addr));
@@ -122,7 +122,7 @@ int serverMode(char *port) {
   return 1;
  }
  isConnected = 1;
- printf("chat started\n\n");
+ printf("==============================================================\n");
  while (fgets(buffer, DEFAULT_BUFLEN, stdin) != NULL) {
   if (isConnected == 0) break;
   ret = sendto(newsockfd, buffer, DEFAULT_BUFLEN, 0, (struct sockaddr *) &cl_addr, len);
