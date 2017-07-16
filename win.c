@@ -27,7 +27,7 @@ void OnDataReceived(void *param) {
 		if (iResult > 0)
 			printf("\n[FRIEND] %s\n", recvbuf);
 		else if (iResult == 0)
-			printf("Connection closed: socket[ %u ]\n", soc);
+			printf("connection closed: socket[ %u ]\n", soc);
 		else
 			printf("recv failed with error: %d socket[ %u ]\n", WSAGetLastError(), soc);
 	} while (iResult > 0);
@@ -66,7 +66,7 @@ int clientMode(char *ipServer, char *port) {
 			WSACleanup();
 			return 1;
 		}
-		printf("? - connect: ai_flags[ %d ] ai_family[ %d ] ai_socktype[ %d ] ai_protocol[ %d ] sin_family[ %hu ] sin_addr[ %lu ] sin_port[ %hu ]\n",
+		printf("connection attempt: ai_flags[ %d ] ai_family[ %d ] ai_socktype[ %d ] ai_protocol[ %d ] sin_family[ %hu ] sin_addr[ %lu ] sin_port[ %hu ]\n",
 			ptr->ai_flags, ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol, ((SOCKADDR_IN*)ptr->ai_addr)->sin_family, ((SOCKADDR_IN*)ptr->ai_addr)->sin_addr.s_addr, ((SOCKADDR_IN*)ptr->ai_addr)->sin_port);
 		iResult = connect(ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
 		if (iResult == SOCKET_ERROR) {
@@ -74,18 +74,18 @@ int clientMode(char *ipServer, char *port) {
 			ConnectSocket = INVALID_SOCKET;
 			continue;
 		}
-		else printf("Connect: socket[ %u ]\n", ConnectSocket);
+		else printf("connect: socket[ %u ]\n", ConnectSocket);
 		break;
 	}
 	freeaddrinfo(result);
 	if (ConnectSocket == INVALID_SOCKET) {
-		printf("Unable to connect to server: %d\n", WSAGetLastError());
+		printf("unable to connect to server: %d\n", WSAGetLastError());
 		WSACleanup();
 		return 1;
 	}
 	isConnected = 1;
 	handle = (HANDLE)_beginthread(OnDataReceived, 0, &ConnectSocket);
-	printf("Chat started\n");
+	printf("chat started\n\n");
 	while (fgets(sendbuf, DEFAULT_BUFLEN, stdin) != NULL) {
 		if (isConnected == 0) break;
 		iResult = send(ConnectSocket, sendbuf, DEFAULT_BUFLEN, 0);
@@ -97,12 +97,8 @@ int clientMode(char *ipServer, char *port) {
 		}
 	}
 	iResult = shutdown(ConnectSocket, SD_SEND);
-	if (iResult == SOCKET_ERROR) {
+	if (iResult == SOCKET_ERROR) 
 		printf("shutdown failed with error: %d\n", WSAGetLastError());
-		closesocket(ConnectSocket);
-		WSACleanup();
-		return 1;
-	}
 	WaitForSingleObject(handle, INFINITE);
 	closesocket(ConnectSocket);
 	WSACleanup();
@@ -173,7 +169,7 @@ int serverMode(char *port) {
 	closesocket(ListenSocket);
 	isConnected = 1;
 	handle = (HANDLE)_beginthread(OnDataReceived, 0, &ClientSocket);
-	printf("Chat started\n");
+	printf("chat started\n\n");
 	while (fgets(sendbuf, DEFAULT_BUFLEN, stdin) != NULL) {
 		if (isConnected == 0) break;
 		iResult = send(ClientSocket, sendbuf, DEFAULT_BUFLEN, 0);
