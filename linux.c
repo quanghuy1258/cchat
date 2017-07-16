@@ -31,7 +31,8 @@ void * OnDataReceived(void *param) {
 
 int clientMode(char *ipServer, char *port) {
  struct sockaddr_in addr;
- int sockfd, ret;
+ struct sockaddr name;
+ int sockfd, ret, nameLen = sizeof(name);
  char buffer[DEFAULT_BUFLEN] = { 0 };
  pthread_t rThread;
  sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -51,6 +52,20 @@ int clientMode(char *ipServer, char *port) {
   return 1;
  }
  else printf("connect server: sin_family[ %hd ] s_addr[ %lu ] sin_port[ %hu ]\n", addr.sin_family, addr.sin_addr.s_addr, addr.sin_port);
+ ret = getsockname(sockfd, &name, &nameLen);
+ if (ret < 0) {
+  printf("getsockname failed: socket[ %d ]\n", sockfd);
+  close(sockfd);
+  return 1;
+ }
+ else printf("getsockname: sin_family[ %hu ] sin_addr[ %lu ] sin_port[ %hu ]\n", ((sockaddr_in*)&name)->sin_family, ((sockaddr_in*)&name)->sin_addr.s_addr, ((sockaddr_in*)&name)->sin_port);
+ ret = getpeername(sockfd, &name, &nameLen);
+ if (ret < 0) {
+  printf("getpeername failed: socket[ %d ]\n", sockfd);
+  close(sockfd);
+  return 1;
+ }
+ else printf("getpeername: sin_family[ %hu ] sin_addr[ %lu ] sin_port[ %hu ]\n", ((sockaddr_in*)&name)->sin_family, ((sockaddr_in*)&name)->sin_addr.s_addr, ((sockaddr_in*)&name)->sin_port); 
  ret = pthread_create(&rThread, NULL, OnDataReceived, &sockfd);
  if (ret) {
   printf("error: return Code from pthread_create() is %d\n", ret);
@@ -79,7 +94,8 @@ int clientMode(char *ipServer, char *port) {
 
 int serverMode(char *port) {
  struct sockaddr_in addr, cl_addr;
- int sockfd, len, ret, newsockfd;
+ struct sockaddr name;
+ int sockfd, len, ret, newsockfd, nameLen = sizeof(name);
  char buffer[DEFAULT_BUFLEN] = { 0 };
  pthread_t rThread;
  sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -113,7 +129,23 @@ int serverMode(char *port) {
   close(sockfd);
   return 1;
  }
- else printf("accept connection: socket[ %d ] sin_family[ %hd ] s_addr[ %lu ] sin_port[ %hu ]\n", newsockfd, cl_addr.sin_family, cl_addr.sin_addr.s_addr, cl_addr.sin_port);
+ else printf("accept connection: socket[ %d ] sin_family[ %hd ] s_addr[ %lu ] sin_port[ %hu ]\n", newsockfd, cl_addr.sin_family, cl_addr.sin_addr.s_addr, cl_addr.sin_port); 
+ ret = getsockname(newsockfd, &name, &nameLen);
+ if (ret < 0) {
+  printf("getsockname failed: socket[ %d ]\n", newsockfd);
+  close(newsockfd);
+  close(sockfd);
+  return 1;
+ }
+ else printf("getsockname: sin_family[ %hu ] sin_addr[ %lu ] sin_port[ %hu ]\n", ((sockaddr_in*)&name)->sin_family, ((sockaddr_in*)&name)->sin_addr.s_addr, ((sockaddr_in*)&name)->sin_port);
+ ret = getpeername(newsockfd, &name, &nameLen);
+ if (ret < 0) {
+  printf("getpeername failed: socket[ %d ]\n", newsockfd);
+  close(newsockfd);
+  close(sockfd);
+  return 1;
+ }
+ else printf("getpeername: sin_family[ %hu ] sin_addr[ %lu ] sin_port[ %hu ]\n", ((sockaddr_in*)&name)->sin_family, ((sockaddr_in*)&name)->sin_addr.s_addr, ((sockaddr_in*)&name)->sin_port); 
  ret = pthread_create(&rThread, NULL, OnDataReceived, &newsockfd);
  if (ret) {
   printf("error: return Code from pthread_create() is %d\n", ret);
