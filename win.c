@@ -85,7 +85,7 @@ int clientMode(char *ipServer, char *port) {
 	}
 	isConnected = 1;
 	handle = (HANDLE)_beginthread(OnDataReceived, 0, &ConnectSocket);
-	printf("chat started\n\n");
+	printf("==============================================================\n");
 	while (fgets(sendbuf, DEFAULT_BUFLEN, stdin) != NULL) {
 		if (isConnected == 0) break;
 		iResult = send(ConnectSocket, sendbuf, DEFAULT_BUFLEN, 0);
@@ -169,7 +169,7 @@ int serverMode(char *port) {
 	closesocket(ListenSocket);
 	isConnected = 1;
 	handle = (HANDLE)_beginthread(OnDataReceived, 0, &ClientSocket);
-	printf("chat started\n\n");
+	printf("==============================================================\n");
 	while (fgets(sendbuf, DEFAULT_BUFLEN, stdin) != NULL) {
 		if (isConnected == 0) break;
 		iResult = send(ClientSocket, sendbuf, DEFAULT_BUFLEN, 0);
